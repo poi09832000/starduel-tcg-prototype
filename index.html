@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>星域對決｜集換式卡牌桌遊原型</title>
+  <style>
+    :root { --ink:#f6f0dc; --muted:#b9b096; --line:rgba(246,240,220,.2); --panel:rgba(17,26,39,.84); --gold:#f1bd55; --red:#d85a68; --blue:#4da7d8; --green:#69bb88; --table:#142f2b; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; color:var(--ink); font-family:system-ui,"Microsoft JhengHei",sans-serif; background:radial-gradient(circle at 50% 32%,#315447 0,#142621 42%,#0b1118 100%); }
+    button { font:inherit; cursor:pointer; }
+    .app { max-width:1440px; min-height:100vh; margin:auto; padding:20px; display:grid; grid-template-columns:270px 1fr; gap:20px; }
+    .sidebar,.player,.card,.zone,.log { border:1px solid var(--line); background:var(--panel); box-shadow:0 12px 30px rgba(0,0,0,.25); }
+    .sidebar { border-radius:18px; padding:22px; align-self:start; }
+    h1 { font-size:25px; line-height:1.15; margin:0 0 8px; letter-spacing:.08em; }
+    h2 { font-size:16px; margin:0 0 12px; color:var(--gold); }
+    .subtitle,.rule-list,.meta { color:var(--muted); font-size:13px; line-height:1.55; }
+    .rule-list { padding-left:19px; margin:8px 0 24px; }
+    .pill { display:inline-block; padding:4px 9px; border:1px solid rgba(241,189,85,.45); color:var(--gold); border-radius:99px; font-size:12px; }
+    .board { display:grid; gap:14px; min-width:0; }
+    .player { display:grid; grid-template-columns:200px 1fr; gap:16px; padding:16px; border-radius:16px; }
+    .player.enemy { background:rgba(34,25,40,.84); }
+    .player-info { display:flex; flex-direction:column; gap:10px; }
+    .name-row { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+    .name { font-weight:700; }
+    .health { font-weight:800; font-variant-numeric:tabular-nums; color:#fff; }
+    .meter { height:9px; background:rgba(255,255,255,.12); border-radius:99px; overflow:hidden; }
+    .meter > span { display:block; height:100%; background:linear-gradient(90deg,var(--red),#f28c75); transition:width .25s; }
+    .resources { display:flex; align-items:center; gap:6px; font-size:13px; }
+    .gem { width:13px; height:13px; background:var(--blue); transform:rotate(45deg); display:inline-block; border-radius:2px; }
+    .card-row { display:flex; flex-wrap:wrap; gap:10px; align-content:center; min-height:122px; }
+    .card { position:relative; width:100px; height:142px; padding:9px; border-radius:10px; overflow:hidden; background:linear-gradient(145deg,#264665,#152139 70%); text-align:left; color:var(--ink); }
+    .card:hover { transform:translateY(-4px); border-color:var(--gold); }
+    .card.type-unit { background:linear-gradient(145deg,#35604e,#152d29 70%); }
+    .card.type-spell { background:linear-gradient(145deg,#514078,#211c40 70%); }
+    .cost { position:absolute; right:8px; top:7px; font-size:18px; color:#ccefff; font-weight:800; }
+    .card-title { width:70px; font-weight:700; font-size:13px; line-height:1.15; }
+    .art { height:67px; margin:8px 0 5px; border:1px solid rgba(255,255,255,.18); border-radius:5px; background:radial-gradient(circle at 70% 25%,rgba(255,255,255,.35),transparent 20%),linear-gradient(140deg,rgba(237,194,94,.4),rgba(10,13,31,.15)); }
+    .stats { display:flex; justify-content:space-between; font-weight:800; font-size:14px; }
+    .zone { border-radius:15px; padding:15px; min-height:206px; background:rgba(7,19,19,.38); }
+    .zone-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:14px; color:var(--muted); }
+    .battlefield { display:grid; grid-template-columns:repeat(5,minmax(90px,1fr)); gap:12px; }
+    .slot { min-height:139px; border:1px dashed rgba(246,240,220,.25); border-radius:11px; display:flex; align-items:center; justify-content:center; color:rgba(246,240,220,.4); font-size:12px; }
+    .slot .card { width:100%; min-width:90px; }
+    .controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:4px 0; }
+    .action-group { display:flex; flex-wrap:wrap; gap:8px; }
+    .btn { border:1px solid var(--line); border-radius:9px; padding:9px 13px; color:var(--ink); background:#202f3f; }
+    .btn:hover { border-color:var(--gold); }
+    .btn.primary { color:#231b0e; background:var(--gold); border-color:var(--gold); font-weight:700; }
+    .log { border-radius:12px; padding:12px 15px; font-size:13px; color:var(--muted); }
+    .log strong { color:var(--ink); }
+    .hand { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; padding:5px 0; }
+    .card.selected { outline:3px solid var(--gold); transform:translateY(-7px); }
+    @media (max-width:850px) { .app{grid-template-columns:1fr;padding:12px}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:12px}.player{grid-template-columns:1fr}.battlefield{grid-template-columns:repeat(3,1fr)} }
+    @media (max-width:500px) { .sidebar{display:block}.battlefield{grid-template-columns:repeat(2,1fr)}.card{width:88px;height:132px}.player{padding:12px} }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <section>
+        <span class="pill">概念原型 v0.1</span>
+        <h1>星域對決</h1>
+        <p class="subtitle">集換式卡牌對戰桌遊的第一張桌面草圖。</p>
+      </section>
+      <section>
+        <h2>暫定回合流程</h2>
+        <ol class="rule-list"><li>準備：補充資源並抽牌</li><li>主行動：部署單位或施放法術</li><li>戰鬥：選擇攻擊者與目標</li><li>結束：效果結算、交給對手</li></ol>
+        <p class="meta">這些都是可替換的預設。你之後說明的規則會直接反映在牌面、區域與互動上。</p>
+      </section>
+    </aside>
+    <section class="board" aria-label="星域對決對戰桌面">
+      <section class="player enemy">
+        <div class="player-info"><div class="name-row"><span class="name">對手・艾妲</span><span class="health" id="enemyHealth">20</span></div><div class="meter"><span id="enemyBar" style="width:100%"></span></div><div class="resources"><span class="gem"></span>資源 4 / 4</div></div>
+        <div class="card-row" aria-label="對手戰場"><button class="card type-unit" data-name="霜刃守衛" data-atk="2" data-hp="4"><span class="cost">3</span><span class="card-title">霜刃守衛</span><div class="art"></div><div class="stats"><span>⚔ 2</span><span>♥ 4</span></div></button><button class="card type-unit" data-name="灰燼獵犬" data-atk="3" data-hp="1"><span class="cost">2</span><span class="card-title">灰燼獵犬</span><div class="art"></div><div class="stats"><span>⚔ 3</span><span>♥ 1</span></div></button></div>
+      </section>
+      <section class="zone"><div class="zone-title"><span>戰場</span><span>單位欄位</span></div><div class="battlefield" id="battlefield"><div class="slot">空位</div><div class="slot">空位</div><div class="slot">空位</div><div class="slot">空位</div><div class="slot">空位</div></div></section>
+      <div class="controls"><div class="action-group"><button class="btn" id="drawBtn">抽一張牌</button><button class="btn" id="attackBtn">以選取單位攻擊</button></div><button class="btn primary" id="endBtn">結束回合</button></div>
+      <div class="log" id="log" aria-live="polite"><strong>第 1 回合：</strong>輪到你行動。選取手牌以部署到戰場。</div>
+      <section class="player">
+        <div class="player-info"><div class="name-row"><span class="name">你・星航者</span><span class="health" id="playerHealth">20</span></div><div class="meter"><span id="playerBar" style="width:100%"></span></div><div class="resources"><span class="gem"></span>資源 <span id="mana">3</span> / 3</div></div>
+        <div><div class="zone-title"><span>你的手牌</span><span id="handCount">3 張</span></div><div class="hand" id="hand"></div></div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const cards=[['星輝斥候',1,2,2,'type-unit'],['鐵樹巨像',4,5,5,'type-unit'],['星塵衝擊',2,'法術','', 'type-spell'],['晨光祭司',3,2,4,'type-unit'],['裂隙風暴',5,'法術','', 'type-spell']];
+    const hand=document.querySelector('#hand'), field=document.querySelector('#battlefield'), log=document.querySelector('#log'); let selected=null, mana=3, enemy=20, turn=1;
+    function message(text){log.innerHTML='<strong>第 '+turn+' 回合：</strong>'+text}
+    function makeCard(data){const [name,cost,a,h,type]=data, b=document.createElement('button'); b.className='card '+type; b.innerHTML='<span class="cost">'+cost+'</span><span class="card-title">'+name+'</span><div class="art"></div><div class="stats">'+(a==='法術'?'<span>✦ 法術</span><span></span>':'<span>⚔ '+a+'</span><span>♥ '+h+'</span>')+'</div>'; b.addEventListener('click',()=>select(b)); return b}
+    function select(card){document.querySelectorAll('.hand .card').forEach(c=>c.classList.remove('selected')); selected=card; card.classList.add('selected'); message('已選取「'+card.querySelector('.card-title').textContent+'」。點選空欄位來部署。')}
+    cards.slice(0,3).forEach(c=>hand.appendChild(makeCard(c)));
+    field.addEventListener('click',e=>{const slot=e.target.closest('.slot');if(!slot||!selected)return; const cost=Number(selected.querySelector('.cost').textContent);if(cost>mana){message('資源不足，無法部署這張牌。');return} if(selected.classList.contains('type-spell')){mana-=cost;selected.remove();selected=null;document.querySelector('#mana').textContent=mana;message('施放法術。效果細節將依你的規則設定。');return} slot.textContent='';slot.appendChild(selected);selected.classList.remove('selected');selected=null;mana-=cost;document.querySelector('#mana').textContent=mana;message('單位已部署到戰場。')});
+    document.querySelector('#drawBtn').addEventListener('click',()=>{if(cards.length>hand.children.length){hand.appendChild(makeCard(cards[hand.children.length]));document.querySelector('#handCount').textContent=hand.children.length+' 張';message('你抽了一張牌。')}else message('牌庫暫時沒有更多示例牌。')});
+    document.querySelector('#attackBtn').addEventListener('click',()=>{const unit=field.querySelector('.card');if(!unit){message('先部署一個單位才能攻擊。');return} const atk=Number((unit.querySelector('.stats span')?.textContent.match(/\d+/)||[0])[0]);enemy=Math.max(0,enemy-atk);document.querySelector('#enemyHealth').textContent=enemy;document.querySelector('#enemyBar').style.width=(enemy/20*100)+'%';message('「'+unit.querySelector('.card-title').textContent+'」造成 '+atk+' 點傷害。');if(enemy===0)message('對手生命歸零。你贏得這局示範對戰！')});
+    document.querySelector('#endBtn').addEventListener('click',()=>{turn++;mana=Math.min(10,mana+1);document.querySelector('#mana').textContent=mana;message('回合開始：資源增加至 '+mana+'。')});
+  </script>
+</body>
+</html>
