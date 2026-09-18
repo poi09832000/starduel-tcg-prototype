@@ -34,3 +34,72 @@
     .card.type-unit { background:linear-gradient(145deg,#35604e,#152d29 70%); }
     .card.type-spell { background:linear-gradient(145deg,#514078,#211c40 70%); }
     .cost { position:absolute; right:8px; top:7px; font-size:18px; color:#ccefff; font-weight:800; }
+    .card-title { width:70px; font-weight:700; font-size:13px; line-height:1.15; }
+    .art { height:67px; margin:8px 0 5px; border:1px solid rgba(255,255,255,.18); border-radius:5px; background:radial-gradient(circle at 70% 25%,rgba(255,255,255,.35),transparent 20%),linear-gradient(140deg,rgba(237,194,94,.4),rgba(10,13,31,.15)); }
+    .stats { display:flex; justify-content:space-between; font-weight:800; font-size:14px; }
+    .zone { border-radius:15px; padding:15px; min-height:206px; background:rgba(7,19,19,.38); }
+    .zone-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:14px; color:var(--muted); }
+    .formation { display:grid; gap:10px; }
+    .rank { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.06em; }
+    .rank::after { content:""; flex:1; height:1px; background:var(--line); }
+    .battlefield { display:grid; grid-template-columns:repeat(4,minmax(90px,1fr)); gap:10px; }
+    .slot { min-height:139px; border:1px dashed rgba(246,240,220,.25); border-radius:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:rgba(246,240,220,.4); font-size:12px; padding:6px; text-align:center; }
+    .slot .card { width:100%; min-width:90px; }
+    .position-effect { margin-top:5px; color:var(--gold); font-size:10px; line-height:1.25; }
+    .controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:4px 0; }
+    .action-group { display:flex; flex-wrap:wrap; gap:8px; }
+    .btn { border:1px solid var(--line); border-radius:9px; padding:9px 13px; color:var(--ink); background:#202f3f; }
+    .btn:hover { border-color:var(--gold); }
+    .btn.primary { color:#231b0e; background:var(--gold); border-color:var(--gold); font-weight:700; }
+    .log { border-radius:12px; padding:12px 15px; font-size:13px; color:var(--muted); }
+    .log strong { color:var(--ink); }
+    .hand { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; padding:5px 0; }
+    .card.selected { outline:3px solid var(--gold); transform:translateY(-7px); }
+    @media (max-width:850px) { .app{grid-template-columns:1fr;padding:12px}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:12px}.player{grid-template-columns:1fr}.battlefield{grid-template-columns:repeat(4,1fr)} }
+    @media (max-width:500px) { .sidebar{display:block}.battlefield{grid-template-columns:repeat(2,1fr)}.card{width:88px;height:132px}.player{padding:12px} }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <section>
+        <span class="pill">概念原型 v0.1</span>
+        <h1>星域對決</h1>
+        <p class="subtitle">集換式卡牌對戰桌遊的第一張桌面草圖。</p>
+      </section>
+      <section>
+        <h2>戰場位置（暫定）</h2>
+        <ol class="rule-list"><li>前排四格：守備姿態，承受傷害時獲得防護</li><li>後排四格：支援姿態，英雄技能的效果提升</li></ol>
+        <h2>暫定回合流程</h2>
+        <ol class="rule-list"><li>準備：補充資源並抽牌</li><li>主行動：部署單位或施放法術</li><li>戰鬥：選擇攻擊者與目標</li><li>結束：效果結算、交給對手</li></ol>
+        <p class="meta">這些都是可替換的預設。你之後說明的規則會直接反映在牌面、區域與互動上。</p>
+      </section>
+    </aside>
+    <section class="board" aria-label="星域對決對戰桌面">
+      <section class="player enemy">
+        <div class="player-info"><div class="name-row"><span class="name">對手・艾妲</span><span class="health" id="enemyHealth">20</span></div><div class="meter"><span id="enemyBar" style="width:100%"></span></div><div class="resources"><span class="gem"></span>資源 4 / 4</div></div>
+        <div class="formation" aria-label="對手八格戰場"><div class="rank">後排・支援陣地</div><div class="battlefield"><div class="slot" data-label="對手後排 1" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="對手後排 2" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="對手後排 3" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="對手後排 4" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div></div><div class="rank">前排・守備陣地</div><div class="battlefield"><div class="slot" data-label="對手前排 1" data-effect="守備姿態：受到傷害 -1"><button class="card type-unit"><span class="cost">3</span><span class="card-title">霜刃守衛</span><div class="art"></div><div class="stats"><span>⚔ 2</span><span>♥ 4</span></div></button></div><div class="slot" data-label="對手前排 2" data-effect="守備姿態：受到傷害 -1"><button class="card type-unit"><span class="cost">2</span><span class="card-title">灰燼獵犬</span><div class="art"></div><div class="stats"><span>⚔ 3</span><span>♥ 1</span></div></button></div><div class="slot" data-label="對手前排 3" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="對手前排 4" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div></div></div>
+      </section>
+      <section class="zone"><div class="zone-title"><span>你的八格戰場</span><span>前四／後四・英雄位置會改變技能</span></div><div class="formation" id="battlefield"><div class="rank">前排・守備陣地</div><div class="battlefield"><div class="slot" data-label="前排 1" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="前排 2" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="前排 3" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="前排 4" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div></div><div class="rank">後排・支援陣地</div><div class="battlefield"><div class="slot" data-label="後排 1" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="後排 2" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="後排 3" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="後排 4" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div></div></div></section>
+      <div class="controls"><div class="action-group"><button class="btn" id="drawBtn">抽一張牌</button><button class="btn" id="attackBtn">以選取單位攻擊</button></div><button class="btn primary" id="endBtn">結束回合</button></div>
+      <div class="log" id="log" aria-live="polite"><strong>第 1 回合：</strong>輪到你行動。選取手牌以部署到戰場。</div>
+      <section class="player">
+        <div class="player-info"><div class="name-row"><span class="name">你・星航者</span><span class="health" id="playerHealth">20</span></div><div class="meter"><span id="playerBar" style="width:100%"></span></div><div class="resources"><span class="gem"></span>資源 <span id="mana">3</span> / 3</div></div>
+        <div><div class="zone-title"><span>你的手牌</span><span id="handCount">3 張</span></div><div class="hand" id="hand"></div></div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const cards=[['星輝斥候',1,2,2,'type-unit'],['鐵樹巨像',4,5,5,'type-unit'],['星塵衝擊',2,'法術','', 'type-spell'],['晨光祭司',3,2,4,'type-unit'],['裂隙風暴',5,'法術','', 'type-spell']];
+    const hand=document.querySelector('#hand'), field=document.querySelector('#battlefield'), log=document.querySelector('#log'); let selected=null, mana=3, enemy=20, turn=1;
+    function message(text){log.innerHTML='<strong>第 '+turn+' 回合：</strong>'+text}
+    function makeCard(data){const [name,cost,a,h,type]=data, b=document.createElement('button'); b.className='card '+type; b.innerHTML='<span class="cost">'+cost+'</span><span class="card-title">'+name+'</span><div class="art"></div><div class="stats">'+(a==='法術'?'<span>✦ 法術</span><span></span>':'<span>⚔ '+a+'</span><span>♥ '+h+'</span>')+'</div>'; b.addEventListener('click',()=>select(b)); return b}
+    function select(card){document.querySelectorAll('.hand .card').forEach(c=>c.classList.remove('selected')); selected=card; card.classList.add('selected'); message('已選取「'+card.querySelector('.card-title').textContent+'」。點選空欄位來部署。')}
+    cards.slice(0,3).forEach(c=>hand.appendChild(makeCard(c)));
+    field.addEventListener('click',e=>{const slot=e.target.closest('.slot');if(!slot||!selected||slot.querySelector('.card'))return; const cost=Number(selected.querySelector('.cost').textContent);if(cost>mana){message('資源不足，無法部署這張牌。');return} if(selected.classList.contains('type-spell')){mana-=cost;selected.remove();selected=null;document.querySelector('#mana').textContent=mana;message('施放法術。效果細節將依你的規則設定。');return} slot.textContent='';slot.appendChild(selected);selected.classList.remove('selected');selected=null;mana-=cost;document.querySelector('#mana').textContent=mana;message('英雄已部署至「'+slot.dataset.label+'」：'+slot.dataset.effect+'。')});
+    document.querySelector('#drawBtn').addEventListener('click',()=>{if(cards.length>hand.children.length){hand.appendChild(makeCard(cards[hand.children.length]));document.querySelector('#handCount').textContent=hand.children.length+' 張';message('你抽了一張牌。')}else message('牌庫暫時沒有更多示例牌。')});
+    document.querySelector('#attackBtn').addEventListener('click',()=>{const unit=field.querySelector('.card');if(!unit){message('先部署一個單位才能攻擊。');return} const atk=Number((unit.querySelector('.stats span')?.textContent.match(/[0-9]+/)||[0])[0]);enemy=Math.max(0,enemy-atk);document.querySelector('#enemyHealth').textContent=enemy;document.querySelector('#enemyBar').style.width=(enemy/20*100)+'%';message('「'+unit.querySelector('.card-title').textContent+'」造成 '+atk+' 點傷害。');if(enemy===0)message('對手生命歸零。你贏得這局示範對戰！')});
+    document.querySelector('#endBtn').addEventListener('click',()=>{turn++;mana=Math.min(10,mana+1);document.querySelector('#mana').textContent=mana;message('回合開始：資源增加至 '+mana+'。')});
+  </script>
+</body>
+</html>
