@@ -1,129 +1,71 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>星域對決｜集換式卡牌桌遊原型</title>
-  <style>
-    :root { --ink:#f6f0dc; --muted:#b9b096; --line:rgba(246,240,220,.2); --panel:rgba(17,26,39,.84); --gold:#f1bd55; --red:#d85a68; --blue:#4da7d8; --green:#69bb88; --table:#142f2b; }
-    * { box-sizing:border-box; }
-    body { margin:0; min-width:320px; color:var(--ink); font-family:system-ui,"Microsoft JhengHei",sans-serif; background:radial-gradient(circle at 50% 32%,#315447 0,#142621 42%,#0b1118 100%); }
-    button { font:inherit; cursor:pointer; }
-    .app { max-width:1440px; min-height:100vh; margin:auto; padding:20px; display:grid; grid-template-columns:270px 1fr; gap:20px; }
-    .sidebar,.player,.card,.zone,.log { border:1px solid var(--line); background:var(--panel); box-shadow:0 12px 30px rgba(0,0,0,.25); }
-    .sidebar { border-radius:18px; padding:22px; align-self:start; }
-    h1 { font-size:25px; line-height:1.15; margin:0 0 8px; letter-spacing:.08em; }
-    h2 { font-size:16px; margin:0 0 12px; color:var(--gold); }
-    .subtitle,.rule-list,.meta { color:var(--muted); font-size:13px; line-height:1.55; }
-    .rule-list { padding-left:19px; margin:8px 0 24px; }
-    .pill { display:inline-block; padding:4px 9px; border:1px solid rgba(241,189,85,.45); color:var(--gold); border-radius:99px; font-size:12px; }
-    .board { display:grid; gap:14px; min-width:0; }
-    .player { display:grid; grid-template-columns:200px minmax(0,1fr) 104px; gap:16px; padding:16px; border-radius:16px; }
-    .player.enemy { background:rgba(34,25,40,.84); }
-    .player-info { display:flex; flex-direction:column; gap:10px; }
-    .name-row { display:flex; justify-content:space-between; gap:8px; align-items:center; }
-    .name { font-weight:700; }
-    .health { font-weight:800; font-variant-numeric:tabular-nums; color:#fff; }
-    .meter { height:9px; background:rgba(255,255,255,.12); border-radius:99px; overflow:hidden; }
-    .meter > span { display:block; height:100%; background:linear-gradient(90deg,var(--red),#f28c75); transition:width .25s; }
-    .resources { display:flex; align-items:center; gap:6px; font-size:13px; }
-    .gem { width:13px; height:13px; background:var(--blue); transform:rotate(45deg); display:inline-block; border-radius:2px; }
-    .card-row { display:flex; flex-wrap:wrap; gap:10px; align-content:center; min-height:122px; }
-    .card { position:relative; width:100px; height:142px; padding:9px; border-radius:10px; overflow:hidden; background:linear-gradient(145deg,#264665,#152139 70%); text-align:left; color:var(--ink); }
-    .card:hover { transform:translateY(-4px); border-color:var(--gold); }
-    .card.hero { background:linear-gradient(145deg,#35604e,#152d29 70%); }
-    .card.equipment { background:linear-gradient(145deg,#705f2d,#352c15 70%); }
-    .card.item { background:linear-gradient(145deg,#514078,#211c40 70%); }
-    .cost { position:absolute; right:8px; top:7px; font-size:18px; color:#ccefff; font-weight:800; }
-    .card-title { width:70px; font-weight:700; font-size:13px; line-height:1.15; }
-    .art { height:67px; margin:8px 0 5px; border:1px solid rgba(255,255,255,.18); border-radius:5px; background-image:linear-gradient(rgba(9,17,30,.08),rgba(9,17,30,.08)),url('assets/card-art-sheet.png'); background-size:300% 100%; background-position:0% 50%; }
-    .art.hero-art { background-position:0% 50%; }
-    .art.equipment-art { background-position:50% 50%; }
-    .art.item-art { background-position:100% 50%; }
-    .stats { display:flex; justify-content:space-between; font-weight:800; font-size:14px; }
-    .card-kind { display:block; margin-top:4px; color:var(--gold); font-size:10px; font-weight:700; }
-    .attack-condition { display:block; margin-top:3px; color:var(--muted); font-size:9px; white-space:nowrap; overflow:hidden; }
-    .zone { border-radius:15px; padding:15px; min-height:206px; background:rgba(7,19,19,.38); }
-    .zone-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:14px; color:var(--muted); }
-    .formation { display:grid; gap:10px; }
-    .rank { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.06em; }
-    .rank::after { content:""; flex:1; height:1px; background:var(--line); }
-    .battlefield { display:grid; grid-template-columns:repeat(4,minmax(90px,1fr)); gap:10px; }
-    .slot { min-height:139px; border:1px dashed rgba(246,240,220,.25); border-radius:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:rgba(246,240,220,.4); font-size:12px; padding:6px; text-align:center; }
-    .slot .card { width:100%; min-width:90px; }
-    .hero-stack { width:100%; display:grid; justify-items:center; gap:3px; }
-    .hero-stack .equipment { width:84%; min-width:0; height:34px; padding:5px 7px; }
-    .hero-stack .equipment .art,.hero-stack .equipment .stats,.hero-stack .equipment .cost { display:none; }
-    .hero-stack .equipment .card-title { width:auto; font-size:10px; }
-    .card-zones { display:grid; gap:10px; align-content:center; }
-    .pile { min-height:92px; border:1px solid var(--line); border-radius:9px; padding:8px; display:grid; place-items:center; text-align:center; color:var(--muted); font-size:11px; background:rgba(5,11,19,.38); }
-    .pile.deck::before { content:""; width:50px; height:64px; border:1px solid rgba(241,189,85,.5); border-radius:6px; background:repeating-linear-gradient(135deg,#273d53 0 5px,#1b2635 5px 10px); }
-    .pile.discard .top-card { width:50px; height:64px; border:1px solid rgba(255,255,255,.25); border-radius:6px; display:grid; place-items:center; color:var(--gold); }
-    .position-effect { margin-top:5px; color:var(--gold); font-size:10px; line-height:1.25; }
-    .controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:4px 0; }
-    .action-group { display:flex; flex-wrap:wrap; gap:8px; }
-    .btn { border:1px solid var(--line); border-radius:9px; padding:9px 13px; color:var(--ink); background:#202f3f; }
-    .btn:hover { border-color:var(--gold); }
-    .btn.primary { color:#231b0e; background:var(--gold); border-color:var(--gold); font-weight:700; }
-    .log { border-radius:12px; padding:12px 15px; font-size:13px; color:var(--muted); }
-    .log strong { color:var(--ink); }
-    .hand { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; padding:5px 0; }
-    .card.selected { outline:3px solid var(--gold); transform:translateY(-7px); }
-    @media (max-width:850px) { .app{grid-template-columns:1fr;padding:12px}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:12px}.player{grid-template-columns:1fr}.card-zones{grid-template-columns:1fr 1fr}.battlefield{grid-template-columns:repeat(4,1fr)} }
-    @media (max-width:500px) { .sidebar{display:block}.battlefield{grid-template-columns:repeat(2,1fr)}.card{width:88px;height:132px}.player{padding:12px} }
-  </style>
-</head>
-<body>
-  <main class="app">
-    <aside class="sidebar">
-      <section>
-        <span class="pill">概念原型 v0.1</span>
-        <h1>星域對決</h1>
-        <p class="subtitle">集換式卡牌對戰桌遊的第一張桌面草圖。</p>
-      </section>
-      <section>
-        <h2>戰場位置（暫定）</h2>
-        <ol class="rule-list"><li>前排四格：守備姿態，承受傷害時獲得防護</li><li>後排四格：支援姿態，英雄技能的效果提升</li></ol>
-        <h2>暫定回合流程</h2>
-        <ol class="rule-list"><li>準備：補充資源並抽牌</li><li>主行動：部署單位或施放法術</li><li>戰鬥：選擇攻擊者與目標</li><li>結束：效果結算、交給對手</li></ol>
-        <p class="meta">這些都是可替換的預設。你之後說明的規則會直接反映在牌面、區域與互動上。</p>
-      </section>
-    </aside>
-    <section class="board" aria-label="星域對決對戰桌面">
-      <section class="player enemy">
-        <div class="player-info"><div class="name-row"><span class="name">對手・艾妲</span><span class="health" id="enemyHealth">20</span></div><div class="meter"><span id="enemyBar" style="width:100%"></span></div><div class="resources"><span class="gem"></span>資源 4 / 4</div></div>
-        <div class="formation" aria-label="對手八格戰場"><div class="rank">後排・支援陣地</div><div class="battlefield"><div class="slot" data-label="對手後排 1" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="對手後排 2" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="對手後排 3" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="對手後排 4" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div></div><div class="rank">前排・守備陣地</div><div class="battlefield"><div class="slot" data-label="對手前排 1" data-effect="守備姿態：受到傷害 -1"><div class="hero-stack"><button class="card hero"><span class="cost">3</span><span class="card-title">霜刃守衛</span><span class="card-kind">英雄卡</span><div class="art"></div><div class="stats"><span>⚔ 2</span><span>♥ 4</span></div></button></div></div><div class="slot" data-label="對手前排 2" data-effect="守備姿態：受到傷害 -1"><div class="hero-stack"><button class="card hero"><span class="cost">2</span><span class="card-title">灰燼獵犬</span><span class="card-kind">英雄卡</span><div class="art"></div><div class="stats"><span>⚔ 3</span><span>♥ 1</span></div></button></div></div><div class="slot" data-label="對手前排 3" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="對手前排 4" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div></div></div>
-        <aside class="card-zones" aria-label="對手牌組與棄牌區"><div class="pile deck">牌組<br>32</div><div class="pile discard"><div class="top-card">棄牌</div><span>0 張</span></div></aside>
-      </section>
-      <section class="zone"><div class="zone-title"><span>你的八格戰場</span><span>前四／後四・英雄位置會改變技能</span></div><div class="formation" id="battlefield"><div class="rank">前排・守備陣地</div><div class="battlefield"><div class="slot" data-label="前排 1" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="前排 2" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="前排 3" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div><div class="slot" data-label="前排 4" data-effect="守備姿態：受到傷害 -1">空位<div class="position-effect">受到傷害 -1</div></div></div><div class="rank">後排・支援陣地</div><div class="battlefield"><div class="slot" data-label="後排 1" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="後排 2" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="後排 3" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div><div class="slot" data-label="後排 4" data-effect="支援姿態：英雄技能效果 +1">空位<div class="position-effect">技能效果 +1</div></div></div></div></section>
-      <div class="controls"><div class="action-group"><button class="btn" id="drawBtn">抽一張牌</button><button class="btn" id="attackBtn">以選取單位攻擊</button></div><button class="btn primary" id="endBtn">結束回合</button></div>
-      <div class="log" id="log" aria-live="polite"><strong>第 1 回合：</strong>輪到你行動。選取手牌以部署到戰場。</div>
-      <section class="player">
-        <div class="player-info"><div class="name-row"><span class="name">你・星航者</span><span class="health" id="playerHealth">20</span></div><div class="meter"><span id="playerBar" style="width:100%"></span></div><div class="resources"><span class="gem"></span>資源 <span id="mana">3</span> / 3</div></div>
-        <div><div class="zone-title"><span>你的手牌</span><span id="handCount">3 張</span></div><div class="hand" id="hand"></div></div>
-        <aside class="card-zones" aria-label="你的牌組與棄牌區"><div class="pile deck">牌組<br><span id="deckCount">5</span></div><div class="pile discard"><div class="top-card" id="discardTop">棄牌</div><span id="discardCount">0 張</span></div></aside>
-      </section>
-    </section>
-  </main>
-  <script>
-    const cards=[
-      {name:'星輝斥候',cost:1,type:'hero',atk:2,hp:2,condition:'攻擊條件：待設定'},
-      {name:'蒼穹護臂',cost:2,type:'equipment',effect:'英雄獲得護甲'},
-      {name:'月露藥瓶',cost:1,type:'item',effect:'執行物品效果後棄置'},
-      {name:'鐵樹巨像',cost:4,type:'hero',atk:5,hp:5,condition:'攻擊條件：待設定'},
-      {name:'星圖羅盤',cost:2,type:'item',effect:'執行物品效果後棄置'},
-      {name:'流星長槍',cost:3,type:'equipment',effect:'英雄獲得攻擊加成'}
-    ];
-    const hand=document.querySelector('#hand'), field=document.querySelector('#battlefield'), log=document.querySelector('#log'); let selected=null, mana=3, enemy=20, turn=1, discard=0, drawIndex=3;
-    function message(text){log.innerHTML='<strong>第 '+turn+' 回合：</strong>'+text}
-    function makeCard(data){const b=document.createElement('button'); b.className='card '+data.type; b.dataset.type=data.type; b.dataset.effect=data.effect||''; b.innerHTML='<span class="cost">'+data.cost+'</span><span class="card-title">'+data.name+'</span><span class="card-kind">'+({hero:'英雄卡',equipment:'裝備卡',item:'物品卡'})[data.type]+'</span><div class="art '+data.type+'-art"></div>'+(data.type==='hero'?'<div class="stats"><span>⚔ '+data.atk+'</span><span>♥ '+data.hp+'</span></div><span class="attack-condition">'+data.condition+'</span>':'<div class="stats"><span>✦ '+data.effect+'</span></div>'); b.addEventListener('click',()=>select(b)); return b}
-    function discardCard(card){discard++;document.querySelector('#discardCount').textContent=discard+' 張';document.querySelector('#discardTop').textContent=card.querySelector('.card-title').textContent;card.remove()}
-    function select(card){if(card.dataset.type==='item'){message('打出物品卡「'+card.querySelector('.card-title').textContent+'」：'+card.dataset.effect+'，接著放入棄牌區。');discardCard(card);return} document.querySelectorAll('.hand .card').forEach(c=>c.classList.remove('selected'));selected=card;card.classList.add('selected');message(card.dataset.type==='equipment'?'已選取裝備卡。點選一名己方英雄來附加在其下方。':'已選取英雄卡。點選空的戰場格部署。')}
-    cards.slice(0,3).forEach(c=>hand.appendChild(makeCard(c)));
-    field.addEventListener('click',e=>{const slot=e.target.closest('.slot');if(!slot||!selected)return;const cost=Number(selected.querySelector('.cost').textContent);if(cost>mana){message('資源不足，無法打出這張牌。');return}if(selected.dataset.type==='equipment'){const stack=e.target.closest('.hero-stack');if(!stack){message('裝備卡必須附加在己方英雄卡下方。');return}stack.appendChild(selected);mana-=cost;document.querySelector('#mana').textContent=mana;message('裝備已附加至「'+stack.querySelector('.hero .card-title').textContent+'」下方。');selected=null;return}if(slot.querySelector('.hero-stack'))return;slot.textContent='';const stack=document.createElement('div');stack.className='hero-stack';stack.appendChild(selected);slot.appendChild(stack);mana-=cost;document.querySelector('#mana').textContent=mana;message('英雄已部署至「'+slot.dataset.label+'」：'+slot.dataset.effect+'。');selected=null});
-    document.querySelector('#drawBtn').addEventListener('click',()=>{if(drawIndex<cards.length){hand.appendChild(makeCard(cards[drawIndex++]));document.querySelector('#handCount').textContent=hand.children.length+' 張';document.querySelector('#deckCount').textContent=cards.length-drawIndex;message('你抽了一張牌。')}else message('牌組暫時沒有更多示例牌。')});
-    document.querySelector('#attackBtn').addEventListener('click',()=>{const unit=field.querySelector('.hero');if(!unit){message('先部署一名英雄才能攻擊。');return}message('「'+unit.querySelector('.card-title').textContent+'」的攻擊條件尚待設定，因此尚不能宣告攻擊。')});
-    document.querySelector('#endBtn').addEventListener('click',()=>{turn++;mana=Math.min(10,mana+1);document.querySelector('#mana').textContent=mana;message('回合開始：資源增加至 '+mana+'。')});
-  </script>
-</body>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>憶術之源｜規則測試桌面</title>
+<style>
+:root{color-scheme:dark;--gold:#e8c57a;--line:#49645e}*{box-sizing:border-box}body{margin:0;background:#102722;color:#eee9d9;font:15px/1.6 system-ui,"Microsoft JhengHei",sans-serif}main{max-width:1240px;margin:auto;padding:24px}h1,h2,h3,p{margin:0 0 12px}h1{font-size:28px}h2{font-size:19px}small,.muted{color:#b8c9bf}button,input,select,textarea{font:inherit}button{background:#28473f;color:#fff;border:1px solid #6c8b7d;border-radius:8px;padding:9px 13px;cursor:pointer}button:hover:not(:disabled),button.selected{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}button:disabled{opacity:.4;cursor:not-allowed}input,select,textarea{background:#0c201c;color:#fff;border:1px solid var(--line);padding:7px;border-radius:5px}input[type=number]{width:75px}.panel{padding:18px;background:#18352e;border:1px solid var(--line);border-radius:14px;margin:14px 0}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.primary{background:var(--gold);color:#1b2920;font-weight:bold}.warning{border-left:4px solid var(--gold);padding:10px 15px;background:#263d31}.table-wrap{overflow-x:auto}.table{min-width:650px;display:grid;grid-template-columns:1fr 105px;gap:14px}.rank{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.slot{min-height:162px;background:#102820;border:1px dashed #6b8c7a;border-radius:10px;padding:7px;display:flex;flex-direction:column;gap:5px}.slot>button{width:100%;flex:1;padding:6px}.slot small{font-size:11px}.card{width:142px;min-height:178px;text-align:left;background:#244739;border:1px solid #729883;border-radius:10px;padding:10px}.card strong{display:block}.art{display:block;height:77px;border-radius:5px;background-image:url('assets/card-art-sheet.png');background-size:300% 100%;background-position:0% 50%;margin:6px 0}.equipment .art{background-position:50% 50%}.item .art{background-position:100% 50%}.back{background:repeating-linear-gradient(45deg,#233c4a 0 8px,#142d39 8px 16px);text-align:center;color:var(--gold)}.attached{background:#605530;padding:4px;border-radius:4px;font-size:11px}.piles{display:flex;flex-direction:column;gap:12px;justify-content:center}.pile{padding:16px 5px;border:1px solid var(--line);border-radius:8px;text-align:center;background:#0c221d}.hand{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.overlay{position:fixed;inset:0;background:#091b18;z-index:10;display:grid;place-items:center;padding:24px;text-align:center}.overlay[hidden]{display:none}#message{min-height:28px;color:#ffe5a1}details{margin:12px 0}summary{cursor:pointer}table{border-collapse:collapse;width:100%}td,th{padding:7px;border-bottom:1px solid var(--line);text-align:left}label{display:inline-block;margin:4px 9px 4px 0}#events{max-height:180px;overflow:auto}a{color:var(--gold)}@media(max-width:600px){main{padding:12px}.panel{padding:12px}h1{font-size:24px}.card{width:130px}}
+</style>
+<main>
+<header><small>ORIGIN OF MEMORYCRAFT · 艾爾德隆</small><h1>憶術之源</h1><p>雙人共用螢幕・規則測試桌面 v0.2</p></header>
+<p class="warning">卡名、HP 與卡圖是測試素材，不是正式卡牌。攻擊條件、技能及物品效果未定：由雙方確認後手動結算。未定規則遇到時暫停討論，不自動判定。交接遮罩僅防止意外看見手牌，不具線上對戰保密功能。</p>
+<div id="message" role="status" aria-live="polite"></div><div id="app"></div>
+<details class="panel"><summary>規則與測試範圍</summary><p>每人 20 點生命、20 張牌、至少 1 張英雄、同卡最多 2 張。起手 4 張，無英雄則全數放回洗牌重抽；雙方均無英雄時不補抽。各蓋放一名英雄，確認後同時翻開。</p><p>開始：行動補至己方英雄數上限 → 抽 1 張 → 階段效果。主要：出牌、移動、技能各 1 點；結束免費。結束：階段效果 → 對手開始。剩餘行動不清空。移動僅限己方上下左右相鄰空格，每英雄每回合一次。</p><p>原型操作約定（非正式規則）：合格方逐次選擇補抽；無法抽牌時暫停，不判敗。開始階段行動設為目前上限，不累加超過；回合中英雄數改變不自動增減既有行動（調整時機待定）。技能使用次數及剛登場能否行動，由雙方逐次確認。卡牌例外、同時敗北及玩家生命歸零的處理不自動推定。</p><p>不會自動產生位置加成、玩家傷害、AI 回合或未定的卡牌效果。卡牌例外需人工裁定，本版不模擬未提供的效果。</p><a href="RULES.md">完整規則文件</a></details>
+<details class="panel"><summary>公開事件紀錄</summary><ol id="events"></ol></details>
+</main><div class="overlay" id="privacy" hidden><div><h2 id="privacyText"></h2><p>請將螢幕交給指定玩家，再顯示手牌。</p><button class="primary" id="reveal">我已接手</button></div></div>
+<script id="engine">
+'use strict';
+const CATALOG=Array.from({length:10},(_,i)=>({id:'c'+i,name:['記憶旅者','林地守望者','古城探路者','憶術學徒','旅人護臂','記憶長杖','學院徽章','月露藥瓶','回憶手札','星圖羅盤'][i],type:i<4?'hero':i<7?'equipment':'item',hp:i<4?4:null}));
+class Game{
+ constructor(rng=Math.random){this.rng=rng;this.stage='config';this.players=[];this.active=0;this.viewer=0;this.turn=0;this.log=[];this.pending=null;this.bonus=null;this.blocked=null;this.nextId=0;}
+ require(ok,msg){if(!ok)throw Error(msg);}
+ note(s){this.log.push(s);}
+ shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(this.rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+ start(counts,first){this.require(this.stage==='config','遊戲已開始');this.require(first===0||first===1,'請指定先攻');for(const list of counts){this.require(list.length===10&&list.every(n=>Number.isInteger(n)&&n>=0&&n<=2)&&list.reduce((a,b)=>a+b,0)===20,'牌組須為 20 張，同卡最多 2 張');this.require(list.slice(0,4).some(n=>n>0),'至少需要一張英雄');}this.require(counts.length===2,'需要兩副牌組');this.first=first;this.players=counts.map(list=>{let deck=[];list.forEach((n,i)=>{for(let k=0;k<n;k++)deck.push({...CATALOG[i],uid:++this.nextId,attached:[],moved:false});});this.shuffle(deck);return {health:20,deck,hand:deck.splice(0,4),discard:[],field:Array(8).fill(null),actions:0,ready:false};});this.stage='mulligan';this.viewer=0;this.note('雙方牌組已驗證；起手各 4 張。');this.checkHands();}
+ hasHero(i){return this.players[i].hand.some(c=>c.type==='hero');}
+ count(i){return this.players[i].field.filter(Boolean).length;}
+ checkHands(){if(this.hasHero(0)&&this.hasHero(1)){this.stage='deploy';this.viewer=0;this.note('雙方起手合格：開始各蓋放一張英雄。');}}
+ redraw(){this.require(this.stage==='mulligan'&&!this.bonus&&!this.blocked,'目前不能重抽');let bad=[0,1].filter(i=>!this.hasHero(i));this.require(bad.length>0,'雙方已合格');for(const i of bad){let p=this.players[i];p.deck.push(...p.hand);p.hand=[];this.shuffle(p.deck);p.hand=p.deck.splice(0,4);}this.note(bad.length===2?'雙方同時全數放回洗牌，各重抽 4 張，無補抽資格。':'未合格方全數放回洗牌，重抽 4 張。');if(bad.length===1){this.bonus={player:1-bad[0]};this.viewer=this.bonus.player;}else this.checkHands();}
+ chooseBonus(take){this.require(this.stage==='mulligan'&&this.bonus&&!this.blocked,'沒有補抽資格');let i=this.bonus.player;this.require(this.hasHero(i),'補抽者須已有英雄');if(take&&!this.players[i].deck.length){this.blocked='補抽時牌組已空；規則待確認，可返回選擇不補抽。';return;}if(take)this.players[i].hand.push(this.players[i].deck.shift());this.note('玩家 '+(i+1)+(take?' 選擇補抽 1 張。':' 選擇不補抽。'));this.bonus=null;this.checkHands();}
+ deploy(uid,slot){this.require(this.stage==='deploy','不是蓋牌階段');let p=this.players[this.viewer];this.require(!p.ready&&this.count(this.viewer)===0,'準備階段只能放一張英雄');let c=p.hand.find(c=>c.uid===uid);this.require(c&&c.type==='hero'&&Number.isInteger(slot)&&slot>=0&&slot<8&&!p.field[slot],'請選英雄及己方空格');p.field[slot]=c;p.hand=p.hand.filter(c=>c.uid!==uid);}
+ confirmDeploy(){this.require(this.stage==='deploy'&&this.count(this.viewer)===1,'必須且只能蓋放一張英雄');this.players[this.viewer].ready=true;if(this.players.every(p=>p.ready)){this.stage='reveal';this.note('雙方已確認蓋牌，等待一起翻面。');}else this.viewer=1-this.viewer;}
+ reveal(){this.require(this.stage==='reveal','尚未完成蓋牌');this.active=this.first;this.viewer=this.active;this.turn=1;this.stage='start';this.startStep=0;this.players.forEach(p=>p.field.forEach(c=>{if(c)c.moved=false;}));this.note('雙方英雄同時翻面。');}
+ begin(){this.require(this.stage==='start'&&this.startStep===0&&!this.blocked,'開始階段已補充');let p=this.players[this.active],cap=this.count(this.active);p.actions=cap;this.startStep=1;this.note('玩家 '+(this.active+1)+' 行動補至上限 '+cap+'（不超過目前上限）。');this.drawStart();}
+ drawStart(){this.require(this.stage==='start'&&this.startStep===1,'目前不能抽牌');let p=this.players[this.active];if(!p.deck.length){this.blocked='開始階段牌組已空：抽不到牌的規則待確認，遊戲暫停。';return;}p.hand.push(p.deck.shift());this.startStep=2;this.note('開始階段抽 1 張。');}
+ main(){this.require(this.stage==='start'&&this.startStep===2&&!this.pending&&!this.blocked,'先完成補充、抽牌與效果');this.stage='main';}
+ canAct(){this.require(this.stage==='main'&&!this.pending&&!this.blocked,'目前不能進行主要動作');this.require(this.players[this.active].actions>=1,'行動次數不足');}
+ play(uid,slot,conditions=false){this.canAct();let p=this.players[this.active],c=p.hand.find(c=>c.uid===uid);this.require(c,'請選擇自己的手牌');if(c.type==='hero'){this.require(Number.isInteger(slot)&&slot>=0&&slot<8&&!p.field[slot],'英雄只能打到己方空格');p.field[slot]=c;}else if(c.type==='equipment'){this.require(conditions&&p.field[slot],'請雙方確認裝備條件，並選擇己方英雄');p.field[slot].attached.push(c);}else{this.pending={card:c,kind:'物品',returnStage:'main'};}p.actions--;p.hand=p.hand.filter(x=>x.uid!==uid);this.note('玩家 '+(this.active+1)+' 打出 '+c.name+'，消耗 1 次行動。');}
+ move(from,to){this.canAct();let p=this.players[this.active],c=p.field[from];this.require(c&&Number.isInteger(to)&&to>=0&&to<8&&!p.field[to],'只能移動至己方空格');this.require(!c.moved,'同一英雄本回合已移動');this.require(Math.abs(Math.floor(from/4)-Math.floor(to/4))+Math.abs(from%4-to%4)===1,'只能上下左右相鄰一格，不可斜移');p.field[to]=c;p.field[from]=null;c.moved=true;p.actions--;this.note(c.name+' 移動，消耗 1 次行動。');}
+ skill(slot,confirmed){this.canAct();this.require(confirmed&&this.players[this.active].field[slot],'請確認英雄技能與攻擊條件');this.players[this.active].actions--;this.pending={kind:'英雄技能',returnStage:'main'};this.note('宣告英雄技能，消耗 1 次行動，等待手動結算。');}
+ phaseEffect(){this.require((this.stage==='start'&&this.startStep===2||this.stage==='end')&&!this.pending&&!this.blocked,'目前不能處理階段效果');this.pending={kind:'階段效果',returnStage:this.stage};}
+ settle(values,exception=false){this.require(this.pending,'沒有待結算效果');for(const p of this.players)for(const c of p.field)if(c)this.require(Number.isInteger(values[c.uid])&&values[c.uid]>=0&&values[c.uid]<=9999,'請填入每位英雄結算後的有效 HP');for(const p of this.players)for(let i=0;i<8;i++){let c=p.field[i];if(!c)continue;c.hp=values[c.uid];if(c.hp===0){p.discard.push(c,...c.attached);c.attached=[];p.field[i]=null;this.note(c.name+' HP 歸零，英雄與附加卡一同棄置。');}}if(this.pending.card)this.players[this.active].discard.push(this.pending.card);this.pending=null;this.note('雙方確認效果已結算。');let dead=[0,1].filter(i=>this.count(i)===0);if(dead.length){if(exception||dead.length===2){this.blocked=exception?'卡牌例外：請人工裁定，本版不自動模擬例外效果。':'雙方同時無英雄：勝負規則待確認。';}else{this.stage='over';this.winner=1-dead[0];this.note('玩家 '+(dead[0]+1)+' 場上無英雄，判輸。');}}}
+ end(){this.require(this.stage==='main'&&!this.pending&&!this.blocked,'請先完成效果');this.stage='end';this.note('宣言進入結束階段，不消耗行動。');}
+ pass(){this.require(this.stage==='end'&&!this.pending&&!this.blocked,'請先完成結束階段效果');this.active=1-this.active;this.viewer=this.active;this.turn++;this.stage='start';this.startStep=0;this.players[this.active].field.forEach(c=>{if(c)c.moved=false;});this.note('回合交給玩家 '+(this.active+1)+'；雙方未用行動保留。');}
+}
+</script>
+<script>
+let game=new Game(),selected=null,from=null,mode='play',rpsWinner=null;const $=s=>document.querySelector(s);const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const kind={hero:'英雄',equipment:'裝備',item:'物品'};
+function privacy(){ $('#privacyText').textContent='請玩家 '+(game.viewer+1)+' 接手';$('main').inert=true;$('#privacy').hidden=false;$('#reveal').focus();}
+function act(fn,hide=false){try{fn();selected=null;from=null;$('#message').textContent='';render();if(hide)privacy();}catch(e){$('#message').textContent=e.message;}}
+function card(c){return '<strong>'+esc(c.name)+'</strong><span class="art"></span><small>'+kind[c.type]+'・測試卡'+(c.type==='hero'?' / HP '+c.hp:'')+'</small>';}
+function render(){let app=$('#app');$('#events').innerHTML=game.log.map(s=>'<li>'+esc(s)+'</li>').join('');if(game.stage==='config'){app.innerHTML='<section class="panel"><h2>開局設定</h2><p>請先在桌外猜拳，再記錄勝方及其選擇。提供十種測試卡、各兩張的合法 20 張牌組；正式卡片待補充。</p><label>猜拳勝方 <select id="winner"><option value="">請選擇</option><option value="0">玩家 1</option><option value="1">玩家 2</option></select></label><label>勝方選擇 <select id="order"><option value="first">先攻</option><option value="second">後攻</option></select></label><details><summary>查看／驗證雙方牌組（各 20 張）</summary><table><tr><th>測試卡</th><th>玩家 1</th><th>玩家 2</th></tr>'+CATALOG.map((c,i)=>'<tr><td>'+c.name+' / '+kind[c.type]+'</td><td><input aria-label="玩家 1 '+c.name+' 張數" id="d0_'+i+'" type="number" min="0" max="2" value="2"></td><td><input aria-label="玩家 2 '+c.name+' 張數" id="d1_'+i+'" type="number" min="0" max="2" value="2"></td></tr>').join('')+'</table></details><button class="primary" id="start">驗證牌組並抽起手牌</button></section>';$('#start').onclick=()=>act(()=>{let w=$('#winner').value;if(w==='')throw Error('請記錄猜拳勝方');let first=$('#order').value==='first'?Number(w):1-Number(w);game.start([0,1].map(p=>CATALOG.map((c,i)=>Number($('#d'+p+'_'+i).value))),first);},true);return;}
+const names={mulligan:'起手檢查',deploy:'蓋牌準備',reveal:'同時翻面',start:'開始',main:'主要',end:'結束',over:'遊戲結束'};
+app.innerHTML='<section class="panel bar"><strong>第 '+game.turn+' 回合 · '+names[game.stage]+'</strong><span>目前操作：玩家 '+(game.viewer+1)+'</span><span>先攻：玩家 '+(game.first+1)+'</span><button id="cover">遮住手牌</button><button id="reset">重新開局</button></section>'+(game.blocked?'<p class="warning">'+esc(game.blocked)+'</p>':'')+'<div id="controls" class="panel"></div>'+[1-game.viewer,game.viewer].map(i=>board(i)).join('')+'<section class="panel"><h2>玩家 '+(game.viewer+1)+' 的手牌 · '+game.players[game.viewer].hand.length+' 張</h2><div class="hand">'+game.players[game.viewer].hand.map(c=>'<button class="card '+c.type+(selected===c.uid?' selected':'')+'" data-hand="'+c.uid+'">'+card(c)+'</button>').join('')+'</div></section><div id="effect"></div>';
+$('#cover').onclick=privacy;$('#reset').onclick=()=>{if($('#reset').textContent==='再按一次確認重新開局'){game=new Game();selected=null;from=null;render();}else $('#reset').textContent='再按一次確認重新開局';};
+document.querySelectorAll('[data-hand]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.hand);from=null;mode='play';render();});document.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>slotClick(Number(b.dataset.owner),Number(b.dataset.slot)));
+controls();if(game.pending)effectForm();}
+function board(i){let p=game.players[i],covered=['deploy','reveal'].includes(game.stage);return '<section class="panel"><h2>玩家 '+(i+1)+' · 憶術師 <small>生命 '+p.health+' / 行動 '+p.actions+' / 英雄 '+game.count(i)+' / 手牌 '+p.hand.length+'</small></h2><div class="table-wrap"><div class="table"><div>'+[0,1].map(row=>'<div class="muted">'+(row===0?'前排':'後排')+'</div><div class="rank">'+p.field.slice(row*4,row*4+4).map((c,k)=>{let n=row*4+k;return '<div class="slot"><small>'+(row===0?'前':'後')+(k+1)+'</small><button data-owner="'+i+'" data-slot="'+n+'" class="'+(covered&&c?'back':c?'hero':'')+(from===n&&i===game.active?' selected':'')+'">'+(c?(covered?'憶術之源<br>英雄背面':card(c)+'<br><small>'+(c.moved?'本回合已移動':'')+'</small>'):'空格')+'</button>'+(!covered&&c?c.attached.map(a=>'<div class="attached">裝備 · '+esc(a.name)+'</div>').join(''):'')+'</div>';}).join('')+'</div>').join('')+'</div><aside class="piles"><div class="pile back">牌組<br>'+p.deck.length+' 張</div><div class="pile">棄牌<br>'+p.discard.length+' 張<details><summary>查看</summary>'+p.discard.map(c=>esc(c.name)).join('<br>')+'</details></div></aside></div></div></section>';}
+function controls(){let c=$('#controls');if(game.blocked){c.innerHTML=game.bonus?'<button id="returnBonus">返回補抽選擇（不判敗）</button>':'<p>本局暫停，請記下局面與裁定需求。未定規則或例外效果尚未支援自動續局。</p>';if(game.bonus)$('#returnBonus').onclick=()=>act(()=>{game.blocked=null;});return;}if(game.pending){c.textContent='效果結算中：其他動作暫停，請使用下方結算表。';return;}
+if(game.stage==='mulligan'){c.innerHTML='<p>玩家 1：'+(game.hasHero(0)?'起手合格':'沒有英雄')+'；玩家 2：'+(game.hasHero(1)?'起手合格':'沒有英雄')+'</p>'+(game.bonus?'<p>你已合格，對手本次重抽：可選擇補抽 1 張。</p><button id="take">補抽 1 張</button> <button id="skip">不補抽</button>':'<button id="redraw">無英雄方全數放回洗牌，各重抽 4 張</button>')+' <button id="switch">交給另一位玩家查看</button>';if(game.bonus){$('#take').onclick=()=>act(()=>game.chooseBonus(true),true);$('#skip').onclick=()=>act(()=>game.chooseBonus(false),true);}else $('#redraw').onclick=()=>act(()=>game.redraw(),true);$('#switch').onclick=()=>act(()=>{game.viewer=game.bonus?game.bonus.player:1-game.viewer;},true);}
+if(game.stage==='deploy'){c.innerHTML='<p>選擇手牌中的一張英雄，再點自己的空格。只能放一張；確認後交給對手。</p><button id="ready">確認蓋牌完成</button>';$('#ready').onclick=()=>act(()=>game.confirmDeploy(),true);}
+if(game.stage==='reveal'){c.innerHTML='<p>請雙方一起確認翻面。</p><button id="flip">同時翻開兩位英雄</button>';$('#flip').onclick=()=>act(()=>game.reveal(),true);}
+if(game.stage==='start'){c.innerHTML=game.startStep===0?'<button id="begin">行動補至上限並抽 1 張</button>':'<p>行動與抽牌已完成。確認沒有其他開始效果後進入主要階段。</p><button id="phaseEffect">手動處理開始效果</button> <button id="main">進入主要階段</button>';if(game.startStep===0)$('#begin').onclick=()=>act(()=>game.begin());else{$('#phaseEffect').onclick=()=>act(()=>game.phaseEffect());$('#main').onclick=()=>act(()=>game.main());}}
+if(game.stage==='main'){c.innerHTML='<p>選手牌再點己方位置。移動／技能：先選模式，再點己方英雄。每次皆消耗 1 行動。</p><div class="bar"><button id="move">移動模式</button><button id="skill">技能模式（手動結算）</button><button id="item">打出選取的物品</button><button id="end">進入結束階段 · 免費</button></div><p><label><input type="checkbox" id="legal">雙方確認本次裝備／技能符合條件（含位置、次數與剛登場限制）</label></p><p id="mode">模式：'+({play:'出牌',move:'移動：先點英雄，再點相鄰空格',skill:'技能：點選英雄'})[mode]+'</p>';$('#move').onclick=()=>{selected=null;from=null;mode='move';render();};$('#skill').onclick=()=>{selected=null;from=null;mode='skill';render();};$('#item').onclick=()=>act(()=>{const x=game.players[game.active].hand.find(c=>c.uid===selected);if(!x||x.type!=='item')throw Error('先選取物品卡');game.play(selected);});$('#end').onclick=()=>act(()=>game.end());}
+if(game.stage==='end'){c.innerHTML='<p>未用行動不清空。確認沒有其他結束效果後交接。</p><button id="phaseEffect">手動處理結束效果</button> <button id="pass">交給對手開始階段</button>';$('#phaseEffect').onclick=()=>act(()=>game.phaseEffect());$('#pass').onclick=()=>act(()=>game.pass(),true);}
+if(game.stage==='over')c.innerHTML='<h2>玩家 '+(game.winner+1)+' 獲勝</h2><p>對方場上沒有英雄。可查看棄牌與事件紀錄。</p>';}
+function slotClick(owner,slot){act(()=>{if(game.blocked||game.pending)throw Error('請先完成待處理事項');if(owner!==game.viewer)throw Error('不能操作對方戰場');if(game.stage==='deploy'){game.deploy(selected,slot);return;}if(game.stage!=='main')throw Error('目前不能操作戰場');if(mode==='move'){if(from===null){if(!game.players[owner].field[slot])throw Error('先選英雄');from=slot;render();return;}game.move(from,slot);}else if(mode==='skill'){if(!game.players[owner].field[slot])throw Error('請選英雄');game.skill(slot,$('#legal').checked);}else{let card=game.players[owner].hand.find(c=>c.uid===selected);if(!card)throw Error('先選手牌');if(card.type==='item')throw Error('請使用「打出選取的物品」按鈕');let ok=card.type!=='equipment'||$('#legal').checked;game.play(selected,slot,ok);}},false);}
+// Movement selection is a two-click UI operation; preserve it across the first click.
+const baseSlotClick=slotClick;slotClick=function(owner,slot){if(game.stage==='main'&&mode==='move'&&from===null&&!game.pending&&!game.blocked){if(owner!==game.active||!game.players[owner].field[slot]){$('#message').textContent='先選擇己方英雄';return;}from=slot;render();return;}baseSlotClick(owner,slot);};
+function effectForm(){let c=$('#effect');c.innerHTML='<section class="panel"><h2>'+esc(game.pending.kind)+'：雙方手動結算</h2><p>不自動套用任何傷害或加成。請依雙方同意的卡牌效果填入結算後 HP；未受影響者保持原值。HP 為 0 的英雄與其附加卡將一同棄置。</p>'+game.players.map((p,i)=>'<h3>玩家 '+(i+1)+'</h3>'+p.field.filter(Boolean).map(c=>'<label>'+esc(c.name)+' <input type="number" min="0" max="9999" id="hp'+c.uid+'" value="'+c.hp+'" aria-label="玩家 '+(i+1)+' '+esc(c.name)+' 結算後 HP"></label>').join('')).join('')+'<p><label><input type="checkbox" id="exception">有卡牌效果例外影響無英雄敗北判定（改為暫停人工裁定）</label></p><label><input type="checkbox" id="agreed">雙方確認本次效果及 HP 結果</label><button id="settle">完成效果結算</button><p class="muted">改變位置、牌組、玩家生命等其他效果尚未實作，請勿以此表冒充完整效果引擎。</p></section>';$('#settle').onclick=()=>act(()=>{if(!$('#agreed').checked)throw Error('請先確認結算結果');let values={};game.players.forEach(p=>p.field.filter(Boolean).forEach(c=>{const raw=$('#hp'+c.uid).value;if(raw==='')throw Error('HP 不可空白');values[c.uid]=Number(raw);}));game.settle(values,$('#exception').checked);});}
+$('#reveal').onclick=()=>{$('#privacy').hidden=true;$('main').inert=false;};render();
+</script>
 </html>
